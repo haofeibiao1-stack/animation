@@ -19,7 +19,7 @@ metadata:
 满足以下任一条件时启用此技能：
 - 用户输入包含 `figma.com` 的链接
 - 用户提到 Figma、设计稿、设计转 Flutter、UI 还原、像素级、1:1
-- 使用 MCP 工具 `f2c-mcp` 进行设计转换
+- 使用 MCP 工具 `figma-developer-mcp` 进行设计转换
 
 ## 角色设定
 
@@ -238,7 +238,7 @@ Future<void> loadData() async {
 
 1. 从 Figma 链接提取 `fileKey` 和 `nodeId`（如无则使用页面根节点）
 2. 若链接或节点非法则提示用户并停止
-3. 使用 MCP 工具 `f2c-mcp_get_code` 获取节点结构、样式信息、布局数据
+3. 使用 MCP 工具 `figma-developer-mcp_get_figma_data` 获取节点结构、样式信息、布局数据
 4. **此阶段不生成任何 Dart 代码**
 
 ### 2. 确认生成路径
@@ -275,7 +275,7 @@ Future<void> loadData() async {
 
 ### 5. 资源下载与校验
 
-1. 使用 `f2c-mcp_get_image` 下载所有非系统 UI 图像
+1. 使用 `figma-developer-mcp_download_figma_images` 下载所有非系统 UI 图像
 2. 若无切图则对节点截图
 3. 保存路径规范：
    - 图片：`<module>/assets/images/`
