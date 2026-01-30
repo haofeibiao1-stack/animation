@@ -1,0 +1,276 @@
+# ============================================
+# Flutter 硬编码字符串检测配置文件
+# ============================================
+
+# ============================================
+# 模块扫描配置
+# 设置要扫描的模块，true 表示扫描，false 表示跳过
+# ============================================
+modules:
+  learn_lib: true        # 学习模块
+  translator_lib: true   # 翻译模块
+  scanner_lib: false     # 扫描模块
+  patronus: false        # 性能监控模块
+
+# 扫描目录基础路径（相对于运行目录）
+# 会根据上面 modules 配置自动拼接路径
+base_directory: "modules"
+
+# 排除的目录/文件（支持 glob 模式）
+exclude_patterns:
+  - "**/generated/**"
+  - "**/l10n/**"
+  - "**/*.g.dart"
+  - "**/*.freezed.dart"
+  - "**/test/**"
+  - "**/example/**"
+  - "**/.claude/**"        # 工具目录
+  - "**/pages/test/**"     # 测试页面目录
+  - "**/TestScroll.dart"   # 测试用滚动组件
+
+# ============================================
+# 组件类型检测配置
+# enabled: 是否启用检测
+# check_positional: 是否检测位置参数（如 Text("硬编码")）
+# check_named: 是否检测命名参数
+# ============================================
+widget_types:
+  Text:
+    enabled: true
+    check_positional: true
+    check_named: false
+  
+  AppBar:
+    enabled: true
+    check_positional: false
+    check_named: true
+  
+  SnackBar:
+    enabled: true
+    check_positional: false
+    check_named: true
+  
+  AlertDialog:
+    enabled: true
+    check_positional: false
+    check_named: true
+  
+  ListTile:
+    enabled: true
+    check_positional: false
+    check_named: true
+  
+  Tooltip:
+    enabled: true
+    check_positional: false
+    check_named: true
+  
+  Chip:
+    enabled: false  # 通常 Chip 的 label 是变量
+    check_positional: false
+    check_named: true
+  
+  TextField:
+    enabled: true
+    check_positional: false
+    check_named: true
+  
+  TextFormField:
+    enabled: true
+    check_positional: false
+    check_named: true
+  
+  TextButton:
+    enabled: false  # 通常 child 是 Text 组件
+    check_positional: false
+    check_named: false
+  
+  ElevatedButton:
+    enabled: false
+    check_positional: false
+    check_named: false
+  
+  OutlinedButton:
+    enabled: false
+    check_positional: false
+    check_named: false
+  
+  # 新增常用组件
+  Tab:
+    enabled: true
+    check_positional: false
+    check_named: true
+  
+  BottomNavigationBarItem:
+    enabled: true
+    check_positional: false
+    check_named: true
+  
+  DrawerHeader:
+    enabled: true
+    check_positional: false
+    check_named: true
+  
+  PopupMenuItem:
+    enabled: true
+    check_positional: false
+    check_named: true
+  
+  DropdownMenuItem:
+    enabled: true
+    check_positional: false
+    check_named: true
+
+# ============================================
+# 需要检测的命名参数
+# 当组件的 check_named 为 true 时，检测这些参数
+# ============================================
+named_arguments:
+  # 输入提示类
+  hintText: true
+  labelText: true
+  helperText: true
+  errorText: true
+  counterText: true
+  prefixText: true
+  suffixText: true
+  
+  # 标题/标签类
+  title: true
+  label: true
+  message: true
+  tooltip: true
+  semanticLabel: true
+  
+  # 内容类
+  content: false  # 通常是 Widget
+  subtitle: true
+  
+  # 按钮文本
+  cancelText: true
+  confirmText: true
+  positiveText: true
+  negativeText: true
+
+# ============================================
+# 深度检测配置
+# 检测嵌套在这些参数中的 Text 组件
+# ============================================
+deep_check_arguments:
+  - child
+  - title
+  - label
+  - content
+  - leading
+  - trailing
+  - subtitle
+  - icon
+
+# ============================================
+# 条件表达式检测
+# 检测 condition ? "字符串A" : "字符串B" 模式
+# ============================================
+check_conditional_expression: true
+
+# ============================================
+# 排除的方法调用
+# 这些方法中的字符串参数不检测（如埋点事件名）
+# ============================================
+exclude_method_calls:
+  - "DottingUtil.onEvent"
+  - "Analytics.logEvent"
+  - "FirebaseAnalytics.logEvent"
+  - "debugPrint"
+  - "print"
+  - "log"
+
+# ============================================
+# 字符串过滤规则
+# ============================================
+string_filters:
+  # 最小长度（少于此长度的字符串会被忽略）
+  min_length: 1
+
+  # 是否忽略纯数字
+  ignore_numbers: true
+
+  # 是否忽略纯符号/标点
+  ignore_punctuation: true
+
+  # 是否忽略只包含空格的字符串
+  ignore_whitespace: true
+
+  # 是否只检测包含中文的字符串（国际化场景）
+  chinese_only: false
+
+  # 白名单字符串（完全匹配时忽略）
+  whitelist:
+    - ""
+    - " "
+    - "..."
+    - "•"
+    - "-"
+    - "/"
+    - ":"
+    - "0"
+    - "null"
+    # 语言代码
+    - "zh"
+    - "en"
+    - "ja"
+    - "ko"
+    # 埋点事件名
+    - "text_translation"
+    - "text_translation_study_enter"
+    - "text_voice_translation"
+    - "text_voice_translation_study_enter"
+    - "text_tts_translation"
+    - "text_tts_translation_study_enter"
+    - "text_dict_translation"
+    - "text_dict_translation_study_enter"
+    - "dialect_translation"
+    - "dialog_translation"
+    - "dialect_voice_translation"
+    - "dialog_voice_translation"
+    - "dialect_tts_translation"
+    - "dialog_tts_translation"
+    - "photo_order"
+    - "photo_order_example"
+    - "photo_order_check"
+    - "photo_order_example_check"
+    - "source_speech_dialect_text"
+    - "source_speech_text"
+    - "fangyan"
+    - "mse_chat"
+
+  # 白名单正则（匹配时忽略）
+  whitelist_patterns:
+    - "^\\d+$"                      # 纯数字
+    - "^\\d+\\.\\d+$"               # 小数
+    - "^https?://"                  # URL
+    - "^assets/"                    # 资源路径
+    - "^\\.dart$"                   # 文件扩展名
+    - "^[A-Z_]+$"                   # 全大写常量（如 KEY_NAME）
+    - "^packages/"                  # 包资源路径
+    - "\\.png$"                     # PNG图片
+    - "\\.jpg$"                     # JPG图片
+    - "\\.svg$"                     # SVG图片
+    - "^[a-f0-9]{32}$"              # MD5哈希值
+    - "^&\\w+=\\w+$"                # URL参数
+
+# ============================================
+# 输出配置
+# ============================================
+output:
+  # 输出格式: console, json, csv
+  format: console
+  
+  # 是否按文件分组
+  group_by_file: true
+  
+  # 是否显示代码上下文
+  show_context: true
+  
+  # JSON/CSV 输出文件路径（format 不为 console 时有效）
+  output_file: "hardcode_report.json"
+

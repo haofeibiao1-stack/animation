@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/zhengshuaijie/AndroidStudioProjects/git/plugins/translator_app_ios/modules/translator_lib/lib/src//**)",
+      "Read(//Users/zhengshuaijie/AndroidStudioProjects/git/plugins/translator_app_ios/**)",
+      "Bash(dart run:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
