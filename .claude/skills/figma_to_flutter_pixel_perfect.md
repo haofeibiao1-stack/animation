@@ -158,34 +158,278 @@ class UserCard extends StatelessWidget {
 }
 ```
 
-### Layout 最佳实践
+### Layout 最佳实践（CRITICAL - 避免常见错误）
 
-- **Spacing**：使用 `Gap(n)` 或 `SizedBox` 代替 `Padding` 实现简单间距
-- **Empty UI**：使用 `const SizedBox.shrink()` 表示空组件
-- **避免 IntrinsicWidth/Height**：使用 `Stack` + `FractionallySizedBox` 处理 overlays
-- **Flex 布局**：使用 `Flex` + `Gap/SizedBox` 组合
+#### 1. 布局选择原则
+
+**优先使用流式布局**：
+- `Column`：垂直排列元素
+- `Row`：水平排列元素
+- `Flex`：灵活的弹性布局
+- `ListView`：可滚动列表
+
+**谨慎使用绝对定位**：
+- `Stack` + `Positioned`：仅用于层叠场景（背景图+内容、浮动按钮）
+- 避免使用绝对定位来控制常规布局
+
+#### 2. 常见布局错误与修正
+
+**错误 1：过度使用绝对定位导致重叠**
 
 ```dart
-// ✅ Good - Gap for spacing (requires gap package)
+// ❌ 错误 - 组件重叠
+Stack(
+  children: [
+    Positioned(
+      left: 16,
+      top: 102,
+      child: VIPCard(), // height: 196
+    ),
+    Positioned(
+      left: 44,
+      top: 154, // 与 VIPCard 重叠！
+      child: ToolsSection(),
+    ),
+  ],
+)
+
+// ✅ 正确 - 使用流式布局
 Column(
   children: [
-    const HeaderWidget(),
-    const Gap(16),
-    const ContentWidget(),
-    const Gap(24),
-    const FooterWidget(),
+    SizedBox(height: 102),
+    VIPCard(),
+    SizedBox(height: 16),
+    ToolsSection(),
   ],
-);
+)
+```
 
+**错误 2：子元素定位超出父容器**
+
+```dart
+// ❌ 错误 - VIPButton 超出 VIPCard 范围
+class VIPCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        SvgPicture.asset('assets/images/vip_card_bg.svg', width: 343, height: 196),
+        Positioned(
+          left: 36,
+          top: 236, // 超出 196 的高度！
+          child: VIPButton(),
+        ),
+      ],
+    );
+  }
+}
+
+// ✅ 正确 - 按钮在卡片内部
+class VIPCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 343,
+      height: 196,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/vip_card_bg.svg'),
+          fit: BoxFit.fill,
+        ),
+      ),
+      child: Column(
+        children: [
+          // ... 其他内容
+          Padding(
+            padding: EdgeInsets.only(top: 120),
+            child: VIPButton(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+**错误 3：重复定位导致冲突**
+
+```dart
+// ❌ 错误 - VIPBadge 在页面和卡片中都有定位
+Stack(
+  children: [
+    Positioned(left: 39.3, top: 61.89, child: VIPBadge()), // 页面级定位
+    Positioned(left: 16, top: 102, child: VIPCard()), // 卡片内部也有 VIPBadge
+  ],
+)
+
+// ✅ 正确 - 只在卡片内部定位
+Column(
+  children: [
+    UserInfoSection(),
+    VIPCard(), // VIPBadge 在卡片内部
+  ],
+)
+```
+
+**错误 4：固定高度导致溢出**
+
+```dart
+// ❌ 错误 - 固定高度，内容可能溢出
+Container(
+  height: 192, // 固定高度
+  child: Column(
+    children: [
+      _buildItem(),
+      _buildItem(),
+      _buildItem(),
+      _buildItem(), // 可能溢出
+    ],
+  ),
+)
+
+// ✅ 正确 - 自适应高度
+Container(
+  constraints: BoxConstraints(minHeight: 192),
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _buildItem(),
+      _buildItem(),
+      _buildItem(),
+      _buildItem(),
+    ],
+  ),
+)
+```
+
+#### 3. 间距控制
+
+**使用 SizedBox 或 Gap**：
+
+```dart
 // ✅ Good - SizedBox for spacing
 Column(
   children: const [
     HeaderWidget(),
     SizedBox(height: 16),
     ContentWidget(),
+    SizedBox(height: 24),
+    FooterWidget(),
   ],
-);
+)
+
+// ✅ Good - Gap for spacing (requires gap package)
+Column(
+  children: const [
+    HeaderWidget(),
+    Gap(16),
+    ContentWidget(),
+    Gap(24),
+    FooterWidget(),
+  ],
+)
 ```
+
+#### 4. 对齐控制
+
+**使用 mainAxisAlignment 和 crossAxisAlignment**：
+
+```dart
+// ✅ Good - 使用对齐属性
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  crossAxisAlignment: CrossAxisAlignment.center,
+  children: [
+    Text('左侧'),
+    Text('右侧'),
+  ],
+)
+
+// ❌ Bad - 使用绝对定位控制对齐
+Stack(
+  children: [
+    Positioned(left: 0, child: Text('左侧')),
+    Positioned(right: 0, child: Text('右侧')),
+  ],
+)
+```
+
+#### 5. Stack 使用规范
+
+**仅用于层叠场景**：
+
+```dart
+// ✅ 正确的 Stack 使用 - 背景图 + 内容
+Stack(
+  children: [
+    // 背景图
+    Positioned.fill(
+      child: SvgPicture.asset(
+        'assets/images/background.svg',
+        fit: BoxFit.cover,
+      ),
+    ),
+    // 内容区域
+    Positioned.fill(
+      child: SafeArea(
+        child: Column(
+          children: [
+            Header(),
+            Expanded(child: Content()),
+          ],
+        ),
+      ),
+    ),
+  ],
+)
+
+// ✅ 正确的 Stack 使用 - 浮动按钮
+Stack(
+  children: [
+    MainContent(),
+    Positioned(
+      right: 16,
+      bottom: 16,
+      child: FloatingActionButton(
+        onPressed: () {},
+        child: Icon(Icons.add),
+      ),
+    ),
+  ],
+)
+```
+
+#### 6. 响应式布局
+
+**使用 FractionallySizedBox 处理相对尺寸**：
+
+```dart
+// ✅ Good - 相对宽度
+FractionallySizedBox(
+  widthFactor: 0.9, // 90% 宽度
+  child: Container(
+    height: 200,
+    color: Colors.blue,
+  ),
+)
+
+// ✅ Good - 使用 LayoutBuilder
+LayoutBuilder(
+  builder: (context, constraints) {
+    return Container(
+      width: constraints.maxWidth * 0.8,
+      height: constraints.maxHeight * 0.5,
+    );
+  },
+)
+```
+
+### Spacing
+
+- **Spacing**：使用 `Gap(n)` 或 `SizedBox` 代替 `Padding` 实现简单间距
+- **Empty UI**：使用 `const SizedBox.shrink()` 表示空组件
+- **避免 IntrinsicWidth/Height**：使用 `Stack` + `FractionallySizedBox` 处理 overlays
+- **Flex 布局**：使用 `Flex` + `Gap/SizedBox` 组合
 
 ### 性能优化
 
@@ -252,11 +496,12 @@ Future<void> loadData() async {
 ### 3. 分析设计结构
 
 分析并记录：
-- 页面整体布局方式（`Column` / `Row` / `Stack` / 绝对定位）
+- 页面整体布局方式（优先使用 `Column` / `Row`，谨慎使用 `Stack`）
 - 页面背景处理
 - 固定区域（如底部按钮、顶部导航）
 - 可交互区域标识
 - 响应式断点需求
+- **组件层级关系**：明确哪些元素是父容器的子元素，避免重复定位
 
 ### 4. 节点处理
 
@@ -291,9 +536,13 @@ Future<void> loadData() async {
 
 ### 7. 生成 Flutter 代码
 
-#### 布局规则
+#### 布局规则（CRITICAL）
 - 所有尺寸、间距、圆角**精确来自 Figma**，不使用"接近值"
-- 允许 `Stack` / `Positioned`，不强行使用 `Expanded`
+- **优先使用流式布局**（`Column`、`Row`、`Flex`）
+- **谨慎使用绝对定位**（`Stack` + `Positioned`），仅用于层叠场景
+- **避免组件重叠**：确保所有元素在正确的容器内
+- **避免溢出**：动态内容使用自适应高度，固定高度仅用于明确尺寸的元素
+- **子元素定位一致性**：如果组件内部已包含子元素，不要在父容器中重复定位
 
 #### 资源引用规则（强制使用 package 参数）
 
@@ -496,6 +745,11 @@ class AppButton extends StatelessWidget {
 - [ ] **Dart 规范**：遵循 Null Safety、const 优先、合理命名
 - [ ] **const 使用**：尽可能使用 const 构造函数
 - [ ] **代码可提交**：无编译错误，可直接 PR
+- [ ] **布局使用流式布局**：优先使用 Column/Row，避免过度使用 Stack
+- [ ] **无组件重叠**：所有元素在正确的容器内，无重叠
+- [ ] **无溢出**：动态内容使用自适应高度
+- [ ] **子元素定位一致**：组件内部已包含的子元素不在父容器中重复定位
+- [ ] **固定高度合理**：固定高度仅用于明确尺寸的元素
 
 ---
 
